@@ -69,5 +69,8 @@ void keypadEvent(KeypadEvent key){
             blink = true;    // Blink the LED when holding the * key.
         }
         break;
+
+    case IDLE:
+        break;
     }
 }
