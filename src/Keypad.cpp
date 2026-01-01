@@ -1,7 +1,7 @@
 /*
 ||
 || @file Keypad.cpp
-|| @version 3.1
+|| @version 3.2
 || @author Mark Stanley, Alexander Brevig
 || @contact mstanley@technologist.com, alexanderbrevig@gmail.com
 ||
@@ -32,20 +32,16 @@
 #include <Keypad.h>
 
 // <<constructor>> Allows custom keymap, pin configuration, and keypad sizes.
-Keypad::Keypad(char *userKeymap, byte *row, byte *col, byte numRows, byte numCols) {
-	rowPins = row;
-	columnPins = col;
-	sizeKpd.rows = numRows;
-	sizeKpd.columns = numCols;
-
+Keypad::Keypad(char *userKeymap, byte *row, byte *col, byte numRows, byte numCols) 
+	: bitMap(new uint[numRows]),
+	startTime{0}, rowPins(row), columnPins(col),
+	sizeKpd{.rows{numRows}, .columns{numCols}},
+	single_key{false}, keypadEventListener{nullptr}
+{
 	begin(userKeymap);
 
 	setDebounceTime(10);
 	setHoldTime(500);
-	keypadEventListener = 0;
-
-	startTime = 0;
-	single_key = false;
 }
 
 // Let the user define a keymap - assume the same row/column count as defined in constructor
@@ -155,18 +151,18 @@ void Keypad::nextKeyState(byte idx, boolean button) {
 
 	switch (key[idx].kstate) {
 		case IDLE:
-			if (button==CLOSED) {
+			if (button==KEYPAD_BUTTON_CLOSED) {
 				transitionTo (idx, PRESSED);
 				holdTimer = millis(); }		// Get ready for next HOLD state.
 			break;
 		case PRESSED:
-			if ((millis()-holdTimer)>holdTime)	// Waiting for a key HOLD...
+			if ((millis()-holdTimer)>holdTime)	 // Waiting for a key HOLD...
 				transitionTo (idx, HOLD);
-			else if (button==OPEN)				// or for a key to be RELEASED.
+			else if (button==KEYPAD_BUTTON_OPEN) // or for a key to be RELEASED.
 				transitionTo (idx, RELEASED);
 			break;
 		case HOLD:
-			if (button==OPEN)
+			if (button==KEYPAD_BUTTON_OPEN)
 				transitionTo (idx, RELEASED);
 			break;
 		case RELEASED:
@@ -267,6 +263,7 @@ void Keypad::transitionTo(byte idx, KeyState nextState) {
 
 /*
 || @changelog
+|| | 3.2 2026-01-01 - Jonathan Oakley  : allow more than 10 rows; remove macro clashes
 || | 3.1 2013-01-15 - Mark Stanley     : Fixed missing RELEASED & IDLE status when using a single key.
 || | 3.0 2012-07-12 - Mark Stanley     : Made library multi-keypress by default. (Backwards compatible)
 || | 3.0 2012-07-12 - Mark Stanley     : Modified pin functions to support Keypad_I2C

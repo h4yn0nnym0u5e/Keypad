@@ -1,7 +1,7 @@
 /*
 ||
 || @file Keypad.h
-|| @version 3.1
+|| @version 3.2
 || @author Mark Stanley, Alexander Brevig
 || @contact mstanley@technologist.com, alexanderbrevig@gmail.com
 ||
@@ -52,8 +52,8 @@ do {							 \
 #endif
 
 
-#define OPEN LOW
-#define CLOSED HIGH
+#define KEYPAD_BUTTON_OPEN   LOW
+#define KEYPAD_BUTTON_CLOSED HIGH
 
 typedef char KeypadEvent;
 typedef unsigned int uint;
@@ -67,7 +67,7 @@ typedef struct {
 } KeypadSize;
 
 #define LIST_MAX 10		// Max number of keys on the active list.
-#define MAPSIZE 10		// MAPSIZE is the number of rows (times 16 columns)
+//#define MAPSIZE 10		// MAPSIZE is the number of rows (times 16 columns)
 #define makeKeymap(x) ((char*)x)
 
 
@@ -76,12 +76,13 @@ class Keypad : public Key {
 public:
 
 	Keypad(char *userKeymap, byte *row, byte *col, byte numRows, byte numCols);
+	~Keypad() {delete[] bitMap;}
 
 	virtual void pin_mode(byte pinNum, byte mode) { pinMode(pinNum, mode); }
 	virtual void pin_write(byte pinNum, boolean level) { digitalWrite(pinNum, level); }
 	virtual int  pin_read(byte pinNum) { return digitalRead(pinNum); }
 
-	uint bitMap[MAPSIZE];	// 10 row x 16 column array of bits. Except Due which has 32 columns.
+	uint* bitMap;	// N row x 16/32 column array of bits
 	Key key[LIST_MAX];
 	unsigned long holdTimer;
 
@@ -120,6 +121,7 @@ private:
 
 /*
 || @changelog
+|| | 3.2 2026-01-01 - Jonathan Oakley  : allow more than 10 rows; remove macro clashes
 || | 3.1 2013-01-15 - Mark Stanley     : Fixed missing RELEASED & IDLE status when using a single key.
 || | 3.0 2012-07-12 - Mark Stanley     : Made library multi-keypress by default. (Backwards compatible)
 || | 3.0 2012-07-12 - Mark Stanley     : Modified pin functions to support Keypad_I2C
